@@ -18,6 +18,9 @@ class PianoRoll{
         this.notebuf_velocity = new Array(this.notebuf_length);
         this.notebuf_cursor = 0;
 
+        this.sustain_hold = new Array(128).fill(false);
+        this.sustain_state = false;
+
         for(let i = 0; i < this.notebuf_length; i++)
         {
             this.notebuf_time[i] = -1;
@@ -34,6 +37,19 @@ class PianoRoll{
     noteOn(note, velocity) {
         if(note >= 0 && note < 128)
         {
+            if(this.sustain_hold[note])
+            {
+                this.note_array[note] = 0;
+
+                this.notebuf_time[this.notebuf_cursor] = millis()-20;
+                this.notebuf_notenum[this.notebuf_cursor] = note;
+                this.notebuf_velocity[this.notebuf_cursor] = 0;
+                this.notebuf_cursor += 1;
+                if(this.notebuf_cursor >= this.notebuf_length) this.notebuf_cursor = 0;
+                
+                this.sustain_hold[note] = false;
+            }
+
             this.note_array[note] = velocity;
 
             this.notebuf_time[this.notebuf_cursor] = millis();
@@ -45,6 +61,11 @@ class PianoRoll{
     }
 
     noteOff(note, velocity) {
+        if(this.sustain_state)
+        {
+            this.sustain_hold[note] = true;
+            return;
+        }
         if(note >= 0 && note < 128)
         {
             this.note_array[note] = 0;
@@ -54,6 +75,35 @@ class PianoRoll{
             this.notebuf_velocity[this.notebuf_cursor] = 0;
             this.notebuf_cursor += 1;
             if(this.notebuf_cursor >= this.notebuf_length) this.notebuf_cursor = 0;
+        }
+    }
+
+    sustain(velocity) {
+        if(velocity > 64)
+        {
+            this.sustain_state = true;
+        }
+        else
+        {
+            if(this.sustain_state == true)
+            {
+                for(let note = 0; note < 128; note++)
+                {
+                    if(this.sustain_hold[note])
+                    {
+                        this.note_array[note] = 0;
+
+                        this.notebuf_time[this.notebuf_cursor] = millis();
+                        this.notebuf_notenum[this.notebuf_cursor] = note;
+                        this.notebuf_velocity[this.notebuf_cursor] = 0;
+                        this.notebuf_cursor += 1;
+                        if(this.notebuf_cursor >= this.notebuf_length) this.notebuf_cursor = 0;
+
+                        this.sustain_hold[note] = false;
+                    }
+                }
+            }
+            this.sustain_state = false;
         }
     }
 

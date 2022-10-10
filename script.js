@@ -211,7 +211,7 @@ function onMIDIMessage(message) {
   const data = message.data;
   if(data.length == 3)
   {
-    //console.log("MIDI data: ", data);
+    console.log("MIDI data: ", data);
     if(data[0] == 0x90)
     {
       console.log("Note ON, Note: ", data[1], "Velocity: ", data[2]);
@@ -221,6 +221,11 @@ function onMIDIMessage(message) {
     {
       console.log("Note OFF, Note: ", data[1]);
       pianoRoll.noteOff(data[1], data[2]);
+    }
+    else if(data[0] == 0xB0 && data[1] == 0x40)
+    {
+      console.log("Sustain Velocity: ", data[2]);
+      pianoRoll.sustain(data[2]);
     }
   }
 }
