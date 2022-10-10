@@ -3,8 +3,9 @@
 let cap;
 let cap_started = false;
 let camSelect;
+let camRefresh;
 let frame_counter = 0;
-const devices = [];
+let devices = [];
 let waiting_cam_permission = true;
 
 let mousePt;
@@ -34,8 +35,10 @@ function setup() {
 
     coorTrans = new CamCoordTrans();
     coorTrans.updateTrans();
-
-    matrixTest();
+    
+    camRefresh = createButton("Refresh");
+    camRefresh.position(10, 10);
+    camRefresh.mousePressed(camListRefresh);
     
     navigator.mediaDevices.enumerateDevices().then(gotDevices);
 
@@ -89,10 +92,20 @@ function gotDevices(deviceInfos) {
 
 }
 
+function camListRefresh() {
+  if(waiting_cam_permission)
+  {
+    navigator.mediaDevices.enumerateDevices().then(gotCameraPermission);
+  }
+  
+}
+
 function gotCameraPermission(deviceInfos) {
 
   cap_started = false;
   cap.remove();
+
+  devices = [];
 
   for (let i = 0; i !== deviceInfos.length; ++i) {
     const deviceinfo = deviceInfos[i];
@@ -103,8 +116,12 @@ function gotCameraPermission(deviceInfos) {
       });
     }
   }
+  if(devices[0].id === "")
+  {
+    return;
+  }
   camSelect = createSelect();
-  camSelect.position(10, 10);
+  camSelect.position(80, 10);
   for (let i = 0; i < devices.length; i++) {
         camSelect.option(devices[i].label, i);
   }
@@ -282,18 +299,7 @@ function draw() {
     let img = cap.get();
     image(img, 0, 0);
 
-    cap.loadPixels();
-    // console.log(cap.pixels[1]);
-
     frame_counter++;
-
-    if(waiting_cam_permission)
-    {
-      if(cap.pixels[1] > 0)
-      {
-        navigator.mediaDevices.enumerateDevices().then(gotCameraPermission);
-      }
-    }
 
     mousePt.refresh(mouseX, mouseY);
     for(let i = 0; i < mousePt.pt_num; i++)
