@@ -9,6 +9,11 @@ const devices = [];
 let mousePt;
 let coorTrans;
 
+let midi;
+let midiSelect;
+
+let pianoRoll;
+
 function setup() {
 
     createCanvas(1920, 1080);
@@ -32,6 +37,11 @@ function setup() {
     matrixTest();
     
     navigator.mediaDevices.enumerateDevices().then(gotDevices);
+
+    navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+
+    pianoRoll = new PianoRoll(drawOneNote, drawNoteShadow);
+
 
 }
 
@@ -97,7 +107,6 @@ function gotDevices(deviceInfos) {
 
 }
 
-
 function camSelectChanged() {
     
     cap_started = false;
@@ -116,6 +125,126 @@ function camSelectChanged() {
     cap.hide();
 
     cap_started = true;
+}
+
+function onMIDISuccess(midiAccess) {
+  console.log("MIDI ready!");
+  midi = midiAccess;
+
+  midiSelect = createSelect();
+  midiSelect.position(10, 50);
+  for (const entry of midiAccess.inputs) {
+    const input = entry[1];
+
+    midiSelect.option(input.name, input.id);
+
+    // console.log(input);
+    
+    // console.log(
+    //   `Input port [type:'${input.type}'] id:'${input.id}' manufacturer: '${input.manufacturer}' name: '${input.name}' version: '${input.version}'`
+    // );
+  }
+
+  midiSelect.changed(midiSelectChanged);
+
+  // console.log( midiAccess.inputs.get('input-0') );
+  midiAccess.inputs.get('input-0').onmidimessage = onMIDIMessage;
+
+
+}
+
+function midiSelectChanged() {
+
+  for (const entry of midi.inputs) {
+    const input = entry[1];
+    input.close();
+  }
+
+  let id = midiSelect.value();
+
+  midi.inputs.get(id).onmidimessage = onMIDIMessage;
+
+}
+
+
+function onMIDIMessage(message) {
+  const data = message.data;
+  if(data.length == 3)
+  {
+    //console.log("MIDI data: ", data);
+    if(data[0] == 0x90)
+    {
+      console.log("Note ON, Note: ", data[1], "Velocity: ", data[2]);
+      pianoRoll.noteOn(data[1], data[2]);
+    }
+    else if(data[0] == 0x80)
+    {
+      console.log("Note OFF, Note: ", data[1]);
+      pianoRoll.noteOff(data[1], data[2]);
+    }
+  }
+}
+
+
+function onMIDIFailure(msg) {
+  console.error(`Failed to get MIDI access - ${msg}`);
+}
+
+
+function drawOneNote(noteNum, startTime, endTime, velocity)
+{
+    let pianoroll_width = 1225;
+    let pianoroll_height = 1000;
+    let mmPerMs = 0.1;
+
+    let x0 = pianoroll_width * (noteNum - 21) / 88.0;
+    let x1 = pianoroll_width * (noteNum - 20) / 88.0;
+    let z0 = startTime * mmPerMs;
+    let z1 = endTime * mmPerMs;
+
+    let p0 = coorTrans.world2img(x0,0,-z0);
+    let p1 = coorTrans.world2img(x0,0,-z1);
+    let p2 = coorTrans.world2img(x1,0,-z1);
+    let p3 = coorTrans.world2img(x1,0,-z0);
+
+    if(p0 == null || p1 == null || p2 == null || p3 == null)
+    {
+      return;
+    }
+
+    noStroke();
+    fill(0, 255, 255);
+    quad(p0[0], p0[1], p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+    // let x0 = (roll_x_max - roll_x_min) * noteNum / 128.0 + roll_x_min;
+    // let w = (roll_x_max - roll_x_min) / 128.0;
+    // let y0 = roll_y_max + startTime * pixelPerMs;
+    // let y1 = roll_y_max + endTime * pixelPerMs;
+    // rect(x0, y0, w, y1 - y0);
+}
+
+function drawNoteShadow(noteNum, velocity)
+{
+
+  let pianoroll_width = 1225;
+  let pianoroll_height = 1000;
+  let mmPerMs = 0.1;
+
+  let x0 = pianoroll_width * (noteNum - 20.5) / 88.0;
+  
+  stroke(255, 255, 255);
+  noFill();
+  beginShape();
+  let p = [];
+  for(let theta = 0; theta < 2*Math.PI; theta += 2*Math.PI/8)
+  {
+    let dx = 20*Math.cos(theta);
+    let dy = 20*Math.sin(theta);
+    //p.push(coorTrans.world2img(x0+dx,0+dy,0));
+    p = coorTrans.world2img(x0+dx,0+dy,0);
+    vertex(p[0], p[1]);
+  }
+  endShape(CLOSE);
+
 }
 
 
@@ -159,9 +288,23 @@ function draw() {
     line(p20[0], p20[1], p21[0], p21[1]);
     line(p30[0], p30[1], p31[0], p31[1]);
     line(p40[0], p40[1], p41[0], p41[1]);
-    
-    textSize(18);
+
+    stroke(0, 255, 255);
     strokeWeight(1);
-    text(nf(coorTrans.dFOV, 2, 1), 100, 100);
+    for(let i = 0; i <= 52; i++)
+    {
+      let x = 1225/52*i;
+      let p0 = coorTrans.world2img(x,0,0);
+      let p1 = coorTrans.world2img(x,148,0);
+      line(p0[0], p0[1], p1[0], p1[1]);
+    }
+
+    // textSize(18);
+    // strokeWeight(1);
+    // text(nf(coorTrans.dFOV, 2, 1), 100, 100);
+
+    pianoRoll.drawNotes();
 
 }
+
+

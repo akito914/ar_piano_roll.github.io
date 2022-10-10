@@ -69,7 +69,7 @@ class CamCoordTrans{
         // 鍵盤の縦方向ベクトルと横方向ベクトルの偏角を表示
         let dothv = Matrix.dot(intersect_line.getRange(0,0,3,1), intersect_line.getRange(0,1,3,1));
         this.arghv = Math.acos(dothv) / Math.PI * 180.0;
-        console.log(this.arghv);
+        // console.log(this.arghv);
 
         // 交線ベクトルの垂線ベクトル
         let piano_norm = Matrix.cross(intersect_line.getRange(0,0,3,1), intersect_line.getRange(0,1,3,1)).normalize();
@@ -106,6 +106,10 @@ class CamCoordTrans{
     world2img(X, Y, Z) {
         let vect_world4d = new Matrix([[X], [Y], [Z], [1]], 4, 1);
         let coord_img = Matrix.mul(this.world_to_cam, vect_world4d);
+        if(coord_img.at(2,0) <= 0)
+        {
+            return null;
+        }
         coord_img = coord_img.scalar(this.f / coord_img.at(2,0));
         let ret = [coord_img.at(0,0) + this.cx, coord_img.at(1,0) + this.cy];
         return ret;
