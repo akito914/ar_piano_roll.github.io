@@ -282,7 +282,7 @@ function drawNoteShadow(noteNum, velocity)
   
   stroke(255, 255, 255);
   noFill();
-  strokeWeight(2);
+  strokeWeight(3);
   beginShape();
   for(let theta = 0; theta < 2*Math.PI; theta += 2*Math.PI/16)
   {

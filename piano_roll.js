@@ -35,12 +35,13 @@ class PianoRoll{
     }
 
     noteOn(note, velocity) {
+        
+        this.note_array[note] = velocity;
+
         if(note >= 0 && note < 128)
         {
             if(this.sustain_hold[note])
             {
-                this.note_array[note] = 0;
-
                 this.notebuf_time[this.notebuf_cursor] = millis()-20;
                 this.notebuf_notenum[this.notebuf_cursor] = note;
                 this.notebuf_velocity[this.notebuf_cursor] = 0;
@@ -49,8 +50,6 @@ class PianoRoll{
                 
                 this.sustain_hold[note] = false;
             }
-
-            this.note_array[note] = velocity;
 
             this.notebuf_time[this.notebuf_cursor] = millis();
             this.notebuf_notenum[this.notebuf_cursor] = note;
@@ -61,6 +60,9 @@ class PianoRoll{
     }
 
     noteOff(note, velocity) {
+        
+        this.note_array[note] = 0;
+
         if(this.sustain_state)
         {
             this.sustain_hold[note] = true;
@@ -68,8 +70,6 @@ class PianoRoll{
         }
         if(note >= 0 && note < 128)
         {
-            this.note_array[note] = 0;
-
             this.notebuf_time[this.notebuf_cursor] = millis();
             this.notebuf_notenum[this.notebuf_cursor] = note;
             this.notebuf_velocity[this.notebuf_cursor] = 0;
@@ -91,8 +91,6 @@ class PianoRoll{
                 {
                     if(this.sustain_hold[note])
                     {
-                        this.note_array[note] = 0;
-
                         this.notebuf_time[this.notebuf_cursor] = millis();
                         this.notebuf_notenum[this.notebuf_cursor] = note;
                         this.notebuf_velocity[this.notebuf_cursor] = 0;
@@ -114,12 +112,14 @@ class PianoRoll{
         let endPos = startPos - 1;
         if(endPos < 0) endPos = this.notebuf_length - 1;
 
-        let prev_velocity = new Array(128);
-        let prev_time = new Array(128);
+        let prev_velocity = new Array(128).fill(0);
+        let prev_time = new Array(128).fill(0);
         for(let i = 0; i < 128; i++)
         {
-            prev_velocity[i] = 0;
-            prev_time[i] = 0;
+            if(this.note_array[i] > 0)
+            {
+                this.drawNoteShadow(i, this.note_array[i]);
+            }
         }
 
         let cursor = startPos;
@@ -153,7 +153,6 @@ class PianoRoll{
                 {
                     if(prev_velocity[i] != 0)
                     {
-                        this.drawNoteShadow(i, prev_velocity[i]);
                         this.drawOneNote(i, prev_time[i] - millis(), 0, prev_velocity[i]);
                     }
                 }
