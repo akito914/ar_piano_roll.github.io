@@ -324,10 +324,10 @@ function draw() {
     let p41 = coorTrans.world2img(1225,0,z);
     stroke(255, 0, 0);
     strokeWeight(4);
-    line(p10[0], p10[1], p11[0], p11[1]);
-    line(p20[0], p20[1], p21[0], p21[1]);
-    line(p30[0], p30[1], p31[0], p31[1]);
-    line(p40[0], p40[1], p41[0], p41[1]);
+    if(p10 !== null && p11 !== null) line(p10[0], p10[1], p11[0], p11[1]);
+    if(p20 !== null && p21 !== null) line(p20[0], p20[1], p21[0], p21[1]);
+    if(p30 !== null && p31 !== null) line(p30[0], p30[1], p31[0], p31[1]);
+    if(p40 !== null && p41 !== null) line(p40[0], p40[1], p41[0], p41[1]);
 
     stroke(0, 255, 255);
     strokeWeight(1);
@@ -336,7 +336,7 @@ function draw() {
       let x = 1225/52*i;
       let p0 = coorTrans.world2img(x,0,0);
       let p1 = coorTrans.world2img(x,148,0);
-      line(p0[0], p0[1], p1[0], p1[1]);
+      if(p0 !== null && p1 !== null) line(p0[0], p0[1], p1[0], p1[1]);
     }
 
     // textSize(18);
