@@ -5,6 +5,7 @@ let cap_started = false;
 let camSelect;
 let frame_counter = 0;
 const devices = [];
+let waiting_cam_permission = true;
 
 let mousePt;
 let coorTrans;
@@ -73,28 +74,48 @@ function mouseReleased() {
 // }
 
 function gotDevices(deviceInfos) {
+
+  var constraints = {
+    video: {
+      width: 1920,
+      height: 1080,
+      frameRate: 30
+    }
+  };
+  cap = createCapture(constraints);
+  cap.hide();
+
+  waiting_cam_permission = true;
+
+}
+
+function gotCameraPermission(deviceInfos) {
+
+  cap_started = false;
+  cap.remove();
+
   for (let i = 0; i !== deviceInfos.length; ++i) {
-    const deviceInfo = deviceInfos[i];
-    if (deviceInfo.kind == 'videoinput') {
+    const deviceinfo = deviceInfos[i];
+    if (deviceinfo.kind == 'videoinput') {
       devices.push({
-        label: deviceInfo.label,
-        id: deviceInfo.deviceId
+        label: deviceinfo.label,
+        id: deviceinfo.deviceId
       });
     }
   }
-  //console.log(devices);
-  
   camSelect = createSelect();
   camSelect.position(10, 10);
   for (let i = 0; i < devices.length; i++) {
         camSelect.option(devices[i].label, i);
   }
   camSelect.changed(camSelectChanged);
-  
+  waiting_cam_permission = false;
+  cap_started = true;
+
   var constraints = {
     video: {
       deviceId: {
-        exact: devices[1].id
+        exact: devices[0].id
       },
       width: 1920,
       height: 1080,
@@ -103,6 +124,8 @@ function gotDevices(deviceInfos) {
   };
   cap = createCapture(constraints);
   cap.hide();
+
+  waiting_cam_permission = false;
   cap_started = true;
 
 }
@@ -255,13 +278,21 @@ function draw() {
 
     background(100, 150, 100);
 
+    
+    let img = cap.get();
+    image(img, 0, 0);
 
-    if(cap_started)
+    cap.loadPixels();
+    // console.log(cap.pixels[1]);
+
+    frame_counter++;
+
+    if(waiting_cam_permission)
     {
-        let img = cap.get();
-        image(img, 0, 0);
-
-        frame_counter++;
+      if(cap.pixels[1] > 0)
+      {
+        navigator.mediaDevices.enumerateDevices().then(gotCameraPermission);
+      }
     }
 
     mousePt.refresh(mouseX, mouseY);
