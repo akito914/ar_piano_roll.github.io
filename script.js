@@ -16,6 +16,8 @@ let midiSelect;
 
 let pianoRoll;
 
+let ui_show = true;
+
 function setup() {
 
     createCanvas(1920, 1080);
@@ -56,6 +58,9 @@ function keyPressed() {
     }
     if(key == 'l') {
       console.log(mousePt);
+    }
+    if(key == 'v') {
+      ui_show = !ui_show;
     }
 }
 
@@ -306,47 +311,54 @@ function draw() {
 
     frame_counter++;
 
-    mousePt.refresh(mouseX, mouseY);
-    for(let i = 0; i < mousePt.pt_num; i++)
+    if(ui_show)
     {
-        noFill();
-        stroke(0, 255, 0);
-        strokeWeight(1);
-        ellipse(mousePt.cx[i], mousePt.cy[i], mousePt.rng_r, mousePt.rng_r);
-        text(String(i+1), mousePt.cx[i]+10, mousePt.cy[i]+10);
-        coorTrans.setCornerPoint(i, mousePt.cx[i], mousePt.cy[i])
+
+      mousePt.refresh(mouseX, mouseY);
+      for(let i = 0; i < mousePt.pt_num; i++)
+      {
+          noFill();
+          stroke(0, 255, 0);
+          strokeWeight(1);
+          ellipse(mousePt.cx[i], mousePt.cy[i], mousePt.rng_r, mousePt.rng_r);
+          text(String(i+1), mousePt.cx[i]+10, mousePt.cy[i]+10);
+          coorTrans.setCornerPoint(i, mousePt.cx[i], mousePt.cy[i])
+      }
+
+      coorTrans.updateTrans();
+      let p10 = coorTrans.world2img(0,0,0);
+      let p20 = coorTrans.world2img(0,148,0);
+      let p30 = coorTrans.world2img(1225,148,0);
+      let p40 = coorTrans.world2img(1225,0,0);
+      let z = 100;
+      let p11 = coorTrans.world2img(0,0,z);
+      let p21 = coorTrans.world2img(0,148,z);
+      let p31 = coorTrans.world2img(1225,148,z);
+      let p41 = coorTrans.world2img(1225,0,z);
+      stroke(255, 0, 0);
+      strokeWeight(4);
+      if(p10 !== null && p11 !== null) line(p10[0], p10[1], p11[0], p11[1]);
+      if(p20 !== null && p21 !== null) line(p20[0], p20[1], p21[0], p21[1]);
+      if(p30 !== null && p31 !== null) line(p30[0], p30[1], p31[0], p31[1]);
+      if(p40 !== null && p41 !== null) line(p40[0], p40[1], p41[0], p41[1]);
+
+      stroke(0, 255, 255);
+      strokeWeight(1);
+      for(let i = 0; i <= 52; i++)
+      {
+        let x = 1225/52*i;
+        let p0 = coorTrans.world2img(x,0,0);
+        let p1 = coorTrans.world2img(x,148,0);
+        if(p0 !== null && p1 !== null) line(p0[0], p0[1], p1[0], p1[1]);
+      }
+
+      // textSize(18);
+      // strokeWeight(1);
+      // text(nf(coorTrans.dFOV, 2, 1), 100, 100);
+
+    
+        
     }
-
-    coorTrans.updateTrans();
-    let p10 = coorTrans.world2img(0,0,0);
-    let p20 = coorTrans.world2img(0,148,0);
-    let p30 = coorTrans.world2img(1225,148,0);
-    let p40 = coorTrans.world2img(1225,0,0);
-    let z = 100;
-    let p11 = coorTrans.world2img(0,0,z);
-    let p21 = coorTrans.world2img(0,148,z);
-    let p31 = coorTrans.world2img(1225,148,z);
-    let p41 = coorTrans.world2img(1225,0,z);
-    stroke(255, 0, 0);
-    strokeWeight(4);
-    if(p10 !== null && p11 !== null) line(p10[0], p10[1], p11[0], p11[1]);
-    if(p20 !== null && p21 !== null) line(p20[0], p20[1], p21[0], p21[1]);
-    if(p30 !== null && p31 !== null) line(p30[0], p30[1], p31[0], p31[1]);
-    if(p40 !== null && p41 !== null) line(p40[0], p40[1], p41[0], p41[1]);
-
-    stroke(0, 255, 255);
-    strokeWeight(1);
-    for(let i = 0; i <= 52; i++)
-    {
-      let x = 1225/52*i;
-      let p0 = coorTrans.world2img(x,0,0);
-      let p1 = coorTrans.world2img(x,148,0);
-      if(p0 !== null && p1 !== null) line(p0[0], p0[1], p1[0], p1[1]);
-    }
-
-    // textSize(18);
-    // strokeWeight(1);
-    // text(nf(coorTrans.dFOV, 2, 1), 100, 100);
 
     pianoRoll.drawNotes();
 
