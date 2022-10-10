@@ -199,27 +199,31 @@ function drawOneNote(noteNum, startTime, endTime, velocity)
 
     let x0 = pianoroll_width * (noteNum - 21) / 88.0;
     let x1 = pianoroll_width * (noteNum - 20) / 88.0;
-    let z0 = startTime * mmPerMs;
-    let z1 = endTime * mmPerMs;
+    let r0 = startTime * mmPerMs;
+    let r1 = endTime * mmPerMs;
 
-    let p0 = coorTrans.world2img(x0,0,-z0);
-    let p1 = coorTrans.world2img(x0,0,-z1);
-    let p2 = coorTrans.world2img(x1,0,-z1);
-    let p3 = coorTrans.world2img(x1,0,-z0);
+    let tilt = 75 / 180.0 * Math.PI;
+    let pxy = [
+      [x0, r0],
+      [x0, r1],
+      [x1, r1],
+      [x1, r0],
+    ];
 
-    if(p0 == null || p1 == null || p2 == null || p3 == null)
+    let p = [];
+    for(let i = 0; i < 4; i++)
     {
-      return;
+      p[i] = coorTrans.world2img(pxy[i][0], pxy[i][1]*Math.cos(tilt), -pxy[i][1]*Math.sin(tilt));
+      if(p[i] == null)
+      {
+        return;
+      }
     }
 
     noStroke();
     fill(0, 255, 255);
-    quad(p0[0], p0[1], p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
-    // let x0 = (roll_x_max - roll_x_min) * noteNum / 128.0 + roll_x_min;
-    // let w = (roll_x_max - roll_x_min) / 128.0;
-    // let y0 = roll_y_max + startTime * pixelPerMs;
-    // let y1 = roll_y_max + endTime * pixelPerMs;
-    // rect(x0, y0, w, y1 - y0);
+    quad(p[0][0], p[0][1], p[1][0], p[1][1], p[2][0], p[2][1], p[3][0], p[3][1]);
+    
 }
 
 function drawNoteShadow(noteNum, velocity)
@@ -233,13 +237,12 @@ function drawNoteShadow(noteNum, velocity)
   
   stroke(255, 255, 255);
   noFill();
+  strokeWeight(2);
   beginShape();
-  let p = [];
-  for(let theta = 0; theta < 2*Math.PI; theta += 2*Math.PI/8)
+  for(let theta = 0; theta < 2*Math.PI; theta += 2*Math.PI/16)
   {
     let dx = 20*Math.cos(theta);
     let dy = 20*Math.sin(theta);
-    //p.push(coorTrans.world2img(x0+dx,0+dy,0));
     p = coorTrans.world2img(x0+dx,0+dy,0);
     vertex(p[0], p[1]);
   }
